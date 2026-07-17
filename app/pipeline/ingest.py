@@ -68,7 +68,7 @@ async def _ingest_one(msg: dict, ctx: dict) -> None:
         log.info("duplicate_webhook_skipped", wamid=wamid, wa_id=wa_id)
         return
 
-    text = _extract_text(msg)
+    text, button_id = _extract_text(msg)
 
     if msg["type"] == "audio":
         # Milestone 6 wires the transcriber here:
@@ -94,7 +94,8 @@ async def _ingest_one(msg: dict, ctx: dict) -> None:
     )
     if text is not None:
         await route_message(
-            wa_id=wa_id, wamid=wamid, text=text, profile_name=profile
+            wa_id=wa_id, wamid=wamid, text=text, profile_name=profile,
+            button_id=button_id,
         )
 
 
@@ -129,11 +130,13 @@ async def _claim(wamid: str, msg: dict) -> bool:
         return result.scalar_one_or_none() is not None
 
 
-def _extract_text(msg: dict) -> str | None:
+def _extract_text(msg: dict) -> tuple[str | None, str | None]:
+    """Returns (text, button_id). button_id is set only for button replies —
+    handlers use it to skip the LLM on yes/no confirmations."""
     if msg["type"] == "text":
-        return msg["text"]["body"]
+        return msg["text"]["body"], None
     if msg["type"] == "interactive":
         inter = msg.get("interactive") or {}
         reply = inter.get("button_reply") or inter.get("list_reply") or {}
-        return reply.get("title")
-    return None
+        return reply.get("title"), reply.get("id")
+    return None, None

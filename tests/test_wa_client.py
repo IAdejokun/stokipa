@@ -12,7 +12,7 @@ import pytest
 from sqlalchemy import delete, select
 
 from app.db import SessionLocal
-from app.models import Message
+from app.models import Message, User
 from app.pipeline.ingest import ingest_webhook
 from app.whatsapp.client import (
     OutsideServiceWindowError,
@@ -32,6 +32,7 @@ def _ok_send_response(wamid: str) -> httpx.Response:
 async def _cleanup(wamid: str) -> None:
     async with SessionLocal() as s:
         await s.execute(delete(Message).where(Message.wamid == wamid))
+        await s.execute(delete(User).where(User.wa_id == "2348011122233"))
         await s.commit()
 
 
@@ -126,9 +127,11 @@ async def test_button_titles_truncated_to_20_chars():
         await client.aclose()
 
 
-# ---------------- echo loop (ingest -> router -> wa stub) ----------------
+# ------------- full loop (ingest -> router -> wa stub) -------------
+# Since milestone 4 the router runs the onboarding state machine: a brand-new
+# user's first message triggers the welcome reply.
 
-async def test_echo_reply_sent_for_inbound_text(outbox):
+async def test_reply_sent_for_inbound_text(outbox):
     wamid = f"wamid.echo.{uuid.uuid4()}"
     payload = {
         "entry": [{"changes": [{"value": {
@@ -143,13 +146,12 @@ async def test_echo_reply_sent_for_inbound_text(outbox):
         await ingest_webhook(payload)
         assert len(outbox.sent) == 1
         assert outbox.sent[0]["to"] == "2348011122233"
-        assert "good morning" in outbox.sent[0]["body"]
-        assert "Mama Nkechi" in outbox.sent[0]["body"]
+        assert "Welcome to Stokipa" in outbox.sent[0]["body"]
     finally:
         await _cleanup(wamid)
 
 
-async def test_duplicate_inbound_produces_single_echo(outbox):
+async def test_duplicate_inbound_produces_single_reply(outbox):
     wamid = f"wamid.echo.{uuid.uuid4()}"
     payload = {
         "entry": [{"changes": [{"value": {
