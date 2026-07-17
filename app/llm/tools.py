@@ -131,3 +131,137 @@ CHECKIN_HOUR_TOOL = {
         "required": ["hour", "language"],
     },
 }
+
+# ---------------- intent classification (IDLE state) ----------------
+
+class Intent(BaseModel):
+    type: str  # log_sale | restock | add_item | query | help | smalltalk
+    query_kind: str | None = None  # stock_level | revenue | top_sellers
+    item_name: str | None = None
+    period: str | None = None      # today | week | month
+    language: str = "en"
+
+
+INTENT_TOOL = {
+    "name": "classify_intent",
+    "description": (
+        "Classify what the shop owner wants. They may speak English, Pidgin, "
+        "Yoruba, Hausa, or Igbo."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "type": {
+                "type": "string",
+                "enum": ["log_sale", "restock", "add_item", "query",
+                         "help", "smalltalk"],
+                "description": (
+                    "'log_sale': reporting things sold ('I sell 3 rice'). "
+                    "'restock': bought/added new stock of an EXISTING item "
+                    "('I buy 5 more cartons'). 'add_item': introducing a NEW "
+                    "product to track. 'query': asking about stock, money, or "
+                    "sales. 'help'/'smalltalk': anything else."
+                ),
+            },
+            "query_kind": {
+                "type": ["string", "null"],
+                "enum": ["stock_level", "revenue", "top_sellers", None],
+            },
+            "item_name": {
+                "type": ["string", "null"],
+                "description": "Item the question is about, if any.",
+            },
+            "period": {
+                "type": ["string", "null"],
+                "enum": ["today", "week", "month", None],
+            },
+            "language": {"type": "string", "enum": LANGS},
+        },
+        "required": ["type", "language"],
+    },
+}
+
+
+# ---------------- sale extraction ----------------
+
+class SaleLineOut(BaseModel):
+    inventory_item_id: int | None = None
+    spoken_name: str
+    qty: int = Field(ge=1)
+    unit_price_naira: float | None = None
+
+
+class SaleExtract(BaseModel):
+    lines: list[SaleLineOut]
+    language: str = "en"
+
+
+SALE_TOOL = {
+    "name": "record_sale",
+    "description": (
+        "Extract the items the owner says they sold. Match names to the "
+        "inventory list when confident."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "lines": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "inventory_item_id": {
+                            "type": ["integer", "null"],
+                            "description": (
+                                "id from the inventory list if confidently "
+                                "matched, else null"
+                            ),
+                        },
+                        "spoken_name": {"type": "string"},
+                        "qty": {"type": "integer", "minimum": 1},
+                        "unit_price_naira": {
+                            "type": ["number", "null"],
+                            "description": (
+                                "Only if the owner stated a price for THIS "
+                                "sale; else null (the recorded price is used)."
+                            ),
+                        },
+                    },
+                    "required": ["spoken_name", "qty"],
+                },
+            },
+            "language": {"type": "string", "enum": LANGS},
+        },
+        "required": ["lines", "language"],
+    },
+}
+
+
+# ---------------- restock extraction ----------------
+
+class RestockExtract(BaseModel):
+    inventory_item_id: int | None = None
+    spoken_name: str
+    qty: int = Field(ge=1)
+    unit_cost_naira: float | None = None
+    language: str = "en"
+
+
+RESTOCK_TOOL = {
+    "name": "record_restock",
+    "description": (
+        "The owner bought more stock of an existing item. Extract which item, "
+        "how many, and the unit cost if stated."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "inventory_item_id": {"type": ["integer", "null"]},
+            "spoken_name": {"type": "string"},
+            "qty": {"type": "integer", "minimum": 1},
+            "unit_cost_naira": {"type": ["number", "null"]},
+            "language": {"type": "string", "enum": LANGS},
+        },
+        "required": ["spoken_name", "qty", "language"],
+    },
+}

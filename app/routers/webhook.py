@@ -39,8 +39,13 @@ async def receive(request: Request, background: BackgroundTasks) -> Response:
     raw = await request.body()
     sig = request.headers.get("x-hub-signature-256")
     if not verify_signature(raw, sig, settings.WA_APP_SECRET):
-        log.warning("webhook_bad_signature")
+        import hashlib, hmac as _h  # TEMP DEBUG — remove after diagnosis
+        expected = _h.new(settings.WA_APP_SECRET.encode(), raw, hashlib.sha256).hexdigest()
+        log.warning("webhook_bad_signature",
+                    got=(sig or "")[:15], expected="sha256=" + expected[:8],
+                    body_len=len(raw), secret_fp=settings.WA_APP_SECRET[:4])
         return Response(status_code=401)
+    
 
     try:
         payload = json.loads(raw)

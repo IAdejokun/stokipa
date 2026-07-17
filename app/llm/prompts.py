@@ -33,6 +33,25 @@ CHECKIN_HOUR_SYSTEM = CONTEXT + (
     "ask about the day's sales."
 )
 
+INTENT_SYSTEM = CONTEXT + (
+    " Classify the owner's message. Reporting a sale, buying more stock of "
+    "an existing item, introducing a brand-new product, asking a question "
+    "about stock or money, or something else."
+)
+
+SALE_SYSTEM = CONTEXT + (
+    " The owner is reporting what they sold. Extract every line item.\n"
+    "Owner's inventory (id | name | unit | price naira | stock):\n{inventory}\n"
+    "Match spoken names generously ('indomie' -> the Indomie item, 'mineral' "
+    "-> soft drinks). If not confident, set inventory_item_id to null and "
+    "keep the spoken name exactly as said."
+)
+
+RESTOCK_SYSTEM = CONTEXT + (
+    " The owner bought more stock of one of their existing items.\n"
+    "Owner's inventory (id | name | unit | price naira | stock):\n{inventory}\n"
+    "If not confident which item, set inventory_item_id to null."
+)
 
 _CANNED: dict[str, dict[str, str]] = {
     "welcome": {
@@ -135,6 +154,81 @@ _CANNED: dict[str, dict[str, str]] = {
     },
 }
 
+_CANNED.update({
+    "confirm_sale": {
+        "en": "🧾 You sold:\n{lines}\n\nTotal: *{total}*. Correct?",
+        "pcm": "🧾 You sell:\n{lines}\n\nTotal: *{total}*. E correct?",
+    },
+    "sale_unmatched_note": {
+        "en": "\n\n⚠️ I no see *{names}* for your stock list, so I never count am. You fit add am as new item later.",
+        "pcm": "\n\n⚠️ I no see *{names}* for your stock list, so I never count am. You fit add am as new item later.",
+    },
+    "sale_none_matched": {
+        "en": "⚠️ I no see *{names}* for your stock list. Add am first — talk something like *I get 10 packs of chinchin, ₦500 each*.",
+        "pcm": "⚠️ I no see *{names}* for your stock list. Add am first — talk something like *I get 10 packs of chinchin, ₦500 each*.",
+    },
+    "sale_saved": {
+        "en": "Recorded ✅ Total: *{total}*. Well done!",
+        "pcm": "I don record am ✅ Total: *{total}*. Weldone!",
+    },
+    "sale_retry": {
+        "en": "No wahala, I cancel am. Tell me again wetin you sell.",
+        "pcm": "No wahala, I don cancel am. Talk am again make I hear.",
+    },
+    "confirm_restock": {
+        "en": "📦 Adding {qty} {unit} of {name}{cost}. Correct?",
+        "pcm": "📦 I wan add {qty} {unit} of {name}{cost}. E correct?",
+    },
+    "restock_saved": {
+        "en": "Done ✅ {name}: now {qty} {unit} in stock.",
+        "pcm": "E don enter ✅ {name}: na {qty} {unit} dey now.",
+    },
+    "restock_unmatched": {
+        "en": "I no see *{name}* for your stock list. If na new item, talk am like *I get 10 packs of chinchin, ₦500 each*.",
+        "pcm": "I no see *{name}* for your stock list. If na new item, talk am like *I get 10 packs of chinchin, ₦500 each*.",
+    },
+    "low_stock": {
+        "en": "⚠️ *{name}* don low — only {qty} {unit} remain. Time to buy more!",
+        "pcm": "⚠️ *{name}* don dey finish — na only {qty} {unit} remain. Make you think of buying more!",
+    },
+    "stock_one": {
+        "en": "📦 {name}: {qty} {unit} remain.",
+        "pcm": "📦 {name}: {qty} {unit} remain.",
+    },
+    "stock_item_unknown": {
+        "en": "I no see *{name}* for your stock list.",
+        "pcm": "I no see *{name}* for your stock list.",
+    },
+    "stock_all_header": {
+        "en": "📦 Your stock:",
+        "pcm": "📦 Your stock:",
+    },
+    "period_today": {"en": "today", "pcm": "today"},
+    "period_week": {"en": "this week", "pcm": "this week"},
+    "period_month": {"en": "this month", "pcm": "this month"},
+    "revenue_report": {
+        "en": "💰 You made *{total}* {period_label} from {count} sale(s).",
+        "pcm": "💰 You don make *{total}* {period_label} from {count} sale(s).",
+    },
+    "no_sales_yet": {
+        "en": "No sales recorded {period_label} yet. When you sell, just tell me!",
+        "pcm": "No sale don enter {period_label} yet. Anytime you sell, just talk am!",
+    },
+    "help_full": {
+        "en": ("You fit tell me:\n• *I sold 2 bags of rice* — record a sale\n"
+               "• *I buy 5 more cartons of milk* — add stock\n"
+               "• *How many rice remain?* — check stock\n"
+               "• *How much I make today?* — check money"),
+        "pcm": ("You fit talk:\n• *I sell 2 bags of rice* — make I record am\n"
+                "• *I buy 5 more cartons of milk* — add stock\n"
+                "• *How many rice remain?* — check stock\n"
+                "• *How much I don make today?* — check money"),
+    },
+    "item_saved_idle": {
+        "en": "Added ✅ I dey track am now.",
+        "pcm": "I don add am ✅ I dey track am now.",
+    },
+})
 
 def canned(key: str, lang: str, **fmt: object) -> str:
     variants = _CANNED[key]

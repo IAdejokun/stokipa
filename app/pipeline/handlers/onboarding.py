@@ -58,8 +58,15 @@ async def handle(user: User, wamid: str, text: str, button_id: str | None) -> No
     elif state == ConvoState.ONBOARDING_CHECKIN_TIME:
         await _handle_checkin_time(user, text)
 
+async def handle_new_item_from_idle(user: User, text: str) -> None:
+    """An already-set-up owner introduces a new product. Same extraction and
+    confirm flow as onboarding, but returns to IDLE afterwards."""
+    await _handle_item_message(user, text, return_state=ConvoState.IDLE.value)
 
-async def _handle_item_message(user: User, text: str) -> None:
+
+async def _handle_item_message(
+    user: User, text: str, return_state: str = ConvoState.ONBOARDING_ITEMS.value
+) -> None:
     result = await llm.extract_item_or_done(text)
     lang = result.language
     await _save(user.id, language=lang)
@@ -80,7 +87,8 @@ async def _handle_item_message(user: User, text: str) -> None:
     await _save(
         user.id,
         convo_state=ConvoState.AWAITING_ITEM_CONFIRM,
-        pending_action={"kind": "item", **item.model_dump()},
+        pending_action={"kind": "item", "return": return_state,
+                        **item.model_dump()},
     )
     await wa.send_confirm_buttons(
         user.wa_id,
@@ -95,10 +103,31 @@ async def _handle_item_confirmation(
     user: User, text: str, button_id: str | None
 ) -> None:
     lang = user.language
-    if button_id == "confirm_yes":
-        verdict = "yes"
-    elif button_id == "confirm_no":
-        verdict = "no"
+    if verdict == "yes":
+        pending = user.pending_action or {}
+        back = ConvoState(pending.get("return", ConvoState.ONBOARDING_ITEMS.value))
+        parsed = ParsedItem.model_validate(
+            {k: v for k, v in pending.items() if k not in ("kind", "return")}
+        )
+        try:
+            await create_item(user.id, parsed)
+        except DuplicateItemError:
+            await _save(user.id, pending_action=None, convo_state=back)
+            await wa.send_text(
+                user.wa_id, canned("duplicate_item", lang, name=parsed.name)
+            )
+            return
+        await _save(user.id, pending_action=None, convo_state=back)
+        key = "item_saved_idle" if back == ConvoState.IDLE else "item_saved"
+        await wa.send_text(user.wa_id, canned(key, lang))
+        return
+
+    if verdict == "no":
+        back = ConvoState((user.pending_action or {}).get(
+            "return", ConvoState.ONBOARDING_ITEMS.value))
+        await _save(user.id, pending_action=None, convo_state=back)
+        await wa.send_text(user.wa_id, canned("item_retry", lang))
+        return
     else:
         verdict = (await llm.interpret_confirmation(text)).verdict
 
