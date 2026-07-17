@@ -20,9 +20,9 @@ class Settings(BaseSettings):
     WA_APP_SECRET: str
 
     # LLM / STT
-    ANTHROPIC_API_KEY: str
-    ANTHROPIC_MODEL: str = "claude-haiku-4-5"
-    ANTHROPIC_ESCALATION_MODEL: str = "claude-sonnet-4-6"
+    LLM_API_KEY: str
+    LLM_BASE_URL: str = "https://api.deepseek.com"
+    LLM_MODEL: str = "deepseek-chat"
     OPENAI_API_KEY: str
 
     DATABASE_URL: PostgresDsn = Field(
