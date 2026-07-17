@@ -2,18 +2,21 @@
 .env
 .env.*
 !.env.example
+.envrc
 
 # Virtual environments
 .venv/
 venv/
 env/
 ENV/
+__pypackages__/
 
 # Python bytecode / caches
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.cache/
 
 # Packaging / build artifacts
 build/
@@ -22,6 +25,8 @@ dist/
 *.egg
 .eggs/
 stokipa.egg-info/
+pip-wheel-metadata/
+wheels/
 
 # Installer logs
 pip-log.txt
@@ -29,6 +34,7 @@ pip-delete-this-directory.txt
 
 # Testing / coverage
 .pytest_cache/
+.hypothesis/
 .coverage
 .coverage.*
 htmlcov/
@@ -36,6 +42,8 @@ htmlcov/
 .nox/
 coverage.xml
 *.cover
+*.py,cover
+junit*.xml
 
 # Type checkers / linters
 .mypy_cache/
@@ -51,6 +59,7 @@ coverage.xml
 
 # Logs
 *.log
+logs/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -64,3 +73,8 @@ coverage.xml
 # OS files
 .DS_Store
 Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.orig

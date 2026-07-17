@@ -25,6 +25,9 @@ import structlog
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 
+from app.pipeline.router import route_message
+from app.whatsapp.client import wa
+
 from app.db import SessionLocal
 from app.models import Message
 
@@ -46,6 +49,14 @@ async def ingest_webhook(payload: dict) -> None:
                         wamid=msg.get("id"),
                         wa_id=msg.get("from"),
                     )
+                    # The user must never get silence.
+                    try:
+                        await wa.send_text(
+                            msg["from"],
+                            "Sorry, something went wrong. Abeg try again.",
+                        )
+                    except Exception:
+                        log.exception("apology_send_failed", wamid=msg.get("id"))
 
 
 async def _ingest_one(msg: dict, ctx: dict) -> None:
@@ -81,8 +92,10 @@ async def _ingest_one(msg: dict, ctx: dict) -> None:
         has_text=text is not None,
         profile=profile,
     )
-    # Milestone 4 dispatches from here:
-    #   await route_message(wa_id=wa_id, wamid=wamid, text=text, profile_name=profile)
+    if text is not None:
+        await route_message(
+            wa_id=wa_id, wamid=wamid, text=text, profile_name=profile
+        )
 
 
 async def _claim(wamid: str, msg: dict) -> bool:

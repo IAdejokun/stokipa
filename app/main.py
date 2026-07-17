@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from app.config import settings
 from app.db import engine
 from app.routers.webhook import router as webhook_router
+from app.whatsapp.client import wa
 
 log = structlog.get_logger()
 
@@ -14,6 +15,7 @@ log = structlog.get_logger()
 async def lifespan(app: FastAPI):
     log.info("startup", env=settings.ENV)
     yield
+    await wa.aclose()
     await engine.dispose()
     log.info("shutdown")
 
