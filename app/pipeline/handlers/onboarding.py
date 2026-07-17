@@ -9,6 +9,10 @@ AWAITING_ITEM_CONFIRM ──no───► ONBOARDING_ITEMS (retry)
 AWAITING_ITEM_CONFIRM ──other──► treated as a fresh item message
 ONBOARDING_ITEMS ──"done" (≥1 item)──► ONBOARDING_CHECKIN_TIME
 ONBOARDING_CHECKIN_TIME ──hour parsed──► IDLE (setup complete)
+
+Items can also be added from IDLE (handle_new_item_from_idle): same flow,
+but pending_action carries a "return" state so the confirmation lands the
+user back in IDLE instead of the onboarding loop.
 """
 
 import structlog
@@ -58,6 +62,7 @@ async def handle(user: User, wamid: str, text: str, button_id: str | None) -> No
     elif state == ConvoState.ONBOARDING_CHECKIN_TIME:
         await _handle_checkin_time(user, text)
 
+
 async def handle_new_item_from_idle(user: User, text: str) -> None:
     """An already-set-up owner introduces a new product. Same extraction and
     confirm flow as onboarding, but returns to IDLE afterwards."""
@@ -103,6 +108,13 @@ async def _handle_item_confirmation(
     user: User, text: str, button_id: str | None
 ) -> None:
     lang = user.language
+    if button_id == "confirm_yes":
+        verdict = "yes"
+    elif button_id == "confirm_no":
+        verdict = "no"
+    else:
+        verdict = (await llm.interpret_confirmation(text)).verdict
+
     if verdict == "yes":
         pending = user.pending_action or {}
         back = ConvoState(pending.get("return", ConvoState.ONBOARDING_ITEMS.value))
@@ -126,33 +138,6 @@ async def _handle_item_confirmation(
         back = ConvoState((user.pending_action or {}).get(
             "return", ConvoState.ONBOARDING_ITEMS.value))
         await _save(user.id, pending_action=None, convo_state=back)
-        await wa.send_text(user.wa_id, canned("item_retry", lang))
-        return
-    else:
-        verdict = (await llm.interpret_confirmation(text)).verdict
-
-    if verdict == "yes":
-        pending = user.pending_action or {}
-        parsed = ParsedItem.model_validate(
-            {k: v for k, v in pending.items() if k != "kind"}
-        )
-        try:
-            await create_item(user.id, parsed)
-        except DuplicateItemError:
-            await _save(user.id, pending_action=None,
-                        convo_state=ConvoState.ONBOARDING_ITEMS)
-            await wa.send_text(
-                user.wa_id, canned("duplicate_item", lang, name=parsed.name)
-            )
-            return
-        await _save(user.id, pending_action=None,
-                    convo_state=ConvoState.ONBOARDING_ITEMS)
-        await wa.send_text(user.wa_id, canned("item_saved", lang))
-        return
-
-    if verdict == "no":
-        await _save(user.id, pending_action=None,
-                    convo_state=ConvoState.ONBOARDING_ITEMS)
         await wa.send_text(user.wa_id, canned("item_retry", lang))
         return
 
