@@ -160,7 +160,9 @@ INTENT_TOOL = {
                     "'restock': bought/added new stock of an EXISTING item "
                     "('I buy 5 more cartons'). 'add_item': introducing a NEW "
                     "product to track. 'query': asking about stock, money, or "
-                    "sales. 'help'/'smalltalk': anything else."
+                    "sales. 'add_guardian': wanting a family member or friend "
+                    "to monitor, oversee, or receive updates about the shop. "
+                    "'help'/'smalltalk': anything else."
                 ),
             },
             "query_kind": {

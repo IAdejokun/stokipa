@@ -166,8 +166,10 @@ class GuardianLink(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    guardian_wa_id: Mapped[str] = mapped_column(String(20))
+    guardian_wa_id: Mapped[str | None] = mapped_column(String(20))
     guardian_name: Mapped[str | None] = mapped_column(String(120))
+    invite_code: Mapped[str | None] = mapped_column(String(16), unique=True)
     status: Mapped[str] = mapped_column(String(10), default="PENDING")
     digest_freq: Mapped[str] = mapped_column(String(10), default="WEEKLY")
+    digest_sent_at: Mapped[datetime | None] = mapped_column()
     created_at: Mapped[datetime] = _ts()
