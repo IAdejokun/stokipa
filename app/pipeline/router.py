@@ -11,7 +11,7 @@ from app.db import SessionLocal
 from app.llm import service as llm
 from app.llm.prompts import canned
 from app.models import ConvoState, User
-from app.pipeline.handlers import onboarding, query, sales
+from app.pipeline.handlers import guardian, onboarding, query, sales
 from app.whatsapp.client import wa
 
 log = structlog.get_logger()
@@ -46,10 +46,22 @@ async def route_message(
                         convo_state=ConvoState.NEW)
             session.add(user)
         user.last_seen_at = func.now()
+        user.quiet_alerted = False  # owner is back; next silence re-alerts
         await session.commit()
         await session.refresh(user)
 
     log.info("route", wa_id=wa_id, state=user.convo_state.value)
+
+    # Guardian invite codes work from ANY state (the sender is usually a
+    # brand-new number that must not fall into shop onboarding).
+    code = guardian.extract_code(text)
+    if code:
+        await guardian.handle_code(wa_id, profile_name, code)
+        return
+
+    if user.convo_state == ConvoState.AWAITING_GUARDIAN_CONSENT:
+        await guardian.handle_owner_consent(user, text, button_id)
+        return
 
     if user.convo_state in _ONBOARDING_STATES:
         await onboarding.handle(user, wamid, text, button_id)
@@ -75,5 +87,7 @@ async def route_idle(user: User, wamid: str, text: str) -> None:
         await query.handle(user, intent)
     elif intent.type == "add_item":
         await onboarding.handle_new_item_from_idle(user, text)
+    elif intent.type == "add_guardian":
+        await guardian.request_invite(user)
     else:
         await wa.send_text(user.wa_id, canned("help_full", intent.language))

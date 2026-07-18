@@ -154,7 +154,7 @@ INTENT_TOOL = {
             "type": {
                 "type": "string",
                 "enum": ["log_sale", "restock", "add_item", "query",
-                         "help", "smalltalk"],
+                         "add_guardian", "help", "smalltalk"],
                 "description": (
                     "'log_sale': reporting things sold ('I sell 3 rice'). "
                     "'restock': bought/added new stock of an EXISTING item "

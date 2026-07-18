@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
     func,
+    text
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -66,6 +67,7 @@ class User(Base):
     )
     pending_action: Mapped[dict | None] = mapped_column(JSONB)
     last_seen_at: Mapped[datetime] = _ts()
+    quiet_alerted: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
     created_at: Mapped[datetime] = _ts()
 
     items: Mapped[list["Item"]] = relationship(back_populates="user")

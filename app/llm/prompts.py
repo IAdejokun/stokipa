@@ -159,6 +159,58 @@ _CANNED.update({
         "en": "🧾 You sold:\n{lines}\n\nTotal: *{total}*. Correct?",
         "pcm": "🧾 You sell:\n{lines}\n\nTotal: *{total}*. E correct?",
     },
+    "guardian_invite": {
+        "en": ("No wahala! Send this code to the person wey you want make e dey "
+               "monitor the shop:\n\n*{code}*\n\nMake dem send am to this same "
+               "number for WhatsApp, then you go confirm am."),
+        "pcm": ("No wahala! Send this code give the person wey you wan make e dey "
+                "look the shop matter:\n\n*{code}*\n\nMake dem send am come this "
+                "same number for WhatsApp, then you go confirm am."),
+    },
+    "guardian_code_received": {
+        "en": "Code received ✅ I don ask the shop owner to confirm. Once dem gree, you go start to dey receive updates.",
+        "pcm": "I don receive the code ✅ I don ask the shop owner make e confirm. Once e gree, you go dey receive update.",
+    },
+    "guardian_confirm_ask": {
+        "en": "👤 *{name}* ({number}) wan dey monitor {shop} — dem go receive weekly summary and alert if the shop quiet. You gree?",
+        "pcm": "👤 *{name}* ({number}) wan dey look {shop} matter — dem go receive weekly summary and alert if shop quiet. You gree?",
+    },
+    "guardian_reask": {
+        "en": "Abeg tap ✅ to allow am or ❌ to reject am.",
+        "pcm": "Abeg tap ✅ make you gree or ❌ make you no gree.",
+    },
+    "guardian_active_owner": {
+        "en": "Done ✅ *{name}* go now dey receive weekly updates about the shop.",
+        "pcm": "E don set ✅ *{name}* go dey receive weekly update about the shop.",
+    },
+    "guardian_active_guardian": {
+        "en": "The owner don confirm ✅ You go dey receive weekly summary of {shop}, and I go alert you if the shop quiet for more than 2 days.",
+        "pcm": "Owner don gree ✅ You go dey receive weekly summary of {shop}, and I go alert you if shop quiet pass 2 days.",
+    },
+    "guardian_declined_owner": {
+        "en": "No wahala — I no add am.",
+        "pcm": "No wahala — I no add am.",
+    },
+    "guardian_declined_guardian": {
+        "en": "The owner never approve the link this time.",
+        "pcm": "Owner no approve the link this time.",
+    },
+    "guardian_invalid_code": {
+        "en": "That code no valid or e don expire. Ask the shop owner to send you a fresh one.",
+        "pcm": "That code no correct or e don expire. Ask the shop owner make e send you new one.",
+    },
+    "guardian_self_link": {
+        "en": "You no fit be your own guardian 😄 Share the code with family or friend instead.",
+        "pcm": "You no fit be your own guardian 😄 Share the code give family or friend.",
+    },
+    "quiet_alert": {
+        "en": "🔕 *{shop}* never send any update since {days} days. You fit check on them make sure everything dey okay.",
+        "pcm": "🔕 *{shop}* never send any update reach {days} days now. Abeg you fit check on dem make sure say everything dey alright.",
+    },
+    "weekly_digest_header": {
+        "en": "📊 *Weekly summary — {shop}*",
+        "pcm": "📊 *Weekly summary — {shop}*",
+    },
     "daily_checkin": {
         "en": "Good evening! 🌙 Wetin you sell today? Tell me — like *I sold 2 bags of rice and 1 carton of milk* — make I update your records.",
         "pcm": "Good evening! 🌙 Wetin you sell today? Talk am — like *I sell 2 bags of rice and 1 carton of milk* — make I update your book.",
