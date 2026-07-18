@@ -25,11 +25,11 @@ import structlog
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 
-from app.pipeline.router import route_message
-from app.whatsapp.client import wa
-
 from app.db import SessionLocal
 from app.models import Message
+from app.pipeline.router import route_message
+from app.stt.transcriber import transcriber
+from app.whatsapp.client import wa
 
 log = structlog.get_logger()
 
@@ -71,10 +71,10 @@ async def _ingest_one(msg: dict, ctx: dict) -> None:
     text, button_id = _extract_text(msg)
 
     if msg["type"] == "audio":
-        # Milestone 6 wires the transcriber here:
-        #   buf, mime = await download_media(msg["audio"]["id"])
-        #   text = await transcriber.transcribe(buf, mime)
-        log.info("audio_message_deferred", wamid=wamid, wa_id=wa_id)
+        buf, mime = await wa.download_media(msg["audio"]["id"])
+        text = await transcriber.transcribe(buf, mime)
+        log.info("voice_transcribed", wamid=wamid, wa_id=wa_id,
+                 chars=len(text or ""))
 
     if text is not None:
         async with SessionLocal() as session:
