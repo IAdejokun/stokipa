@@ -60,3 +60,20 @@ async def top_sellers(user_id: int, period: str, limit: int = 3) -> list[tuple[s
             .limit(limit)
         )).all()
     return [(r[0], int(r[1])) for r in rows]
+async def slow_movers(user_id: int, days: int = 14) -> list[Item]:
+    """Items with stock on hand but ZERO sale lines in the window — the
+    'slow-moving stock' observation from the product doc."""
+    cutoff = datetime.now(LAGOS) - timedelta(days=days)
+    cutoff_utc = cutoff.astimezone(timezone.utc).replace(tzinfo=None)
+    async with SessionLocal() as session:
+        sold_ids = select(SaleLine.item_id).join(
+            Sale, Sale.id == SaleLine.sale_id
+        ).where(Sale.user_id == user_id, Sale.sold_at >= cutoff_utc)
+        rows = (await session.execute(
+            select(Item).where(
+                Item.user_id == user_id,
+                Item.qty > 0,
+                Item.id.not_in(sold_ids),
+            ).order_by(Item.name)
+        )).scalars().all()
+    return list(rows)

@@ -211,6 +211,10 @@ _CANNED.update({
         "en": "📊 *Weekly summary — {shop}*",
         "pcm": "📊 *Weekly summary — {shop}*",
     },
+    "share_shop": {
+        "en": "Here be your shop page 🏪\n{url}\n\nShare am for WhatsApp Status, groups, anywhere! Customers fit see wetin you sell and order straight to your WhatsApp.",
+        "pcm": "See your shop page 🏪\n{url}\n\nShare am for WhatsApp Status, group, anywhere! Customer fit see wetin you dey sell and order enter your WhatsApp sharp sharp.",
+    },
     "daily_checkin": {
         "en": "Good evening! 🌙 Wetin you sell today? Tell me — like *I sold 2 bags of rice and 1 carton of milk* — make I update your records.",
         "pcm": "Good evening! 🌙 Wetin you sell today? Talk am — like *I sell 2 bags of rice and 1 carton of milk* — make I update your book.",

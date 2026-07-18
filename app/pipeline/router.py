@@ -11,7 +11,7 @@ from app.db import SessionLocal
 from app.llm import service as llm
 from app.llm.prompts import canned
 from app.models import ConvoState, User
-from app.pipeline.handlers import guardian, onboarding, query, sales
+from app.pipeline.handlers import guardian, onboarding, query, sales,shop
 from app.whatsapp.client import wa
 
 log = structlog.get_logger()
@@ -89,5 +89,7 @@ async def route_idle(user: User, wamid: str, text: str) -> None:
         await onboarding.handle_new_item_from_idle(user, text)
     elif intent.type == "add_guardian":
         await guardian.request_invite(user)
+    elif intent.type == "share_shop":
+        await shop.share_link(user)
     else:
         await wa.send_text(user.wa_id, canned("help_full", intent.language))

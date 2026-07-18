@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     LLM_BASE_URL: str = "https://api.deepseek.com"
     LLM_MODEL: str = "deepseek-chat"
     GROQ_API_KEY: str
+    PUBLIC_BASE_URL: str = "http://localhost:5173"
 
     DATABASE_URL: PostgresDsn = Field(
         description="Must use the postgresql+asyncpg driver."

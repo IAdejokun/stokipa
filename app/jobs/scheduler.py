@@ -165,11 +165,73 @@ async def _build_digest(owner: User) -> str:
         lines.append("📦 Stock levels dey okay.")
     return "\n".join(lines)
 
+async def run_owner_summary_tick(now: datetime | None = None) -> int:
+    """Sunday 6pm Lagos: insights summary straight to each owner — revenue,
+    top sellers, slow movers, thin margins. The doc's 'honest observations'."""
+    now_lagos = (now or datetime.now(LAGOS)).astimezone(LAGOS)
+    if now_lagos.weekday() != DIGEST_WEEKDAY or now_lagos.hour != DIGEST_HOUR:
+        return 0
+    sent = 0
+    async with SessionLocal() as session:
+        users = (await session.execute(
+            select(User).where(User.convo_state == ConvoState.IDLE)
+        )).scalars().all()
+        for user in users:
+            last = user.weekly_summary_sent_at
+            if last is not None and last.isocalendar()[:2] == \
+                    now_lagos.isocalendar()[:2]:
+                continue
+            body = await _build_owner_summary(user)
+            if body is None:
+                continue
+            try:
+                await wa.send_text(user.wa_id, body)
+            except Exception:
+                log.exception("owner_summary_failed", user_id=user.id)
+                continue
+            user.weekly_summary_sent_at = now_lagos
+            sent += 1
+        await session.commit()
+    if sent:
+        log.info("owner_summaries_sent", count=sent)
+    return sent
+
+
+async def _build_owner_summary(user: User) -> str | None:
+    total, count = await reports.revenue(user.id, "week")
+    items = await reports.stock_levels(user.id)
+    if not items:
+        return None  # never onboarded properly; nothing to say
+    top = await reports.top_sellers(user.id, "week")
+    slow = await reports.slow_movers(user.id)
+    thin = [i for i in items
+            if i.cost_kobo and i.price_kobo
+            and (i.price_kobo - i.cost_kobo) / i.price_kobo < 0.10]
+    lines = [f"📊 *Your week — {user.shop_name or 'your shop'}*",
+             f"💰 You make {fmt_naira(total)} from {count} sale(s)."]
+    if top:
+        lines.append("🏆 Best sellers: " + ", ".join(
+            f"{n} ({u})" for n, u in top))
+    if slow:
+        names = ", ".join(i.name for i in slow[:3])
+        lines.append(f"🐌 {names} never sell for 2 weeks — "
+                     "you fit push am or reduce next order.")
+    if thin:
+        names = ", ".join(i.name for i in thin[:3])
+        lines.append(f"📉 Profit thin on {names} — "
+                     "check the price wey you dey sell am.")
+    low = [i for i in items if i.qty <= i.low_stock_at]
+    if low:
+        lines.append("⚠️ Low stock: " + ", ".join(
+            f"{i.name} ({i.qty} {i.unit})" for i in low))
+    return "\n".join(lines)
+
 
 async def _tick() -> None:
     await run_checkin_tick()
     await run_quiet_tick()
     await run_digest_tick()
+    await run_owner_summary_tick()
 
 
 def start() -> None:

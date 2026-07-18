@@ -154,7 +154,7 @@ INTENT_TOOL = {
             "type": {
                 "type": "string",
                 "enum": ["log_sale", "restock", "add_item", "query",
-                         "add_guardian", "help", "smalltalk"],
+                         "add_guardian", "share_shop", "help", "smalltalk"],
                 "description": (
                     "'log_sale': reporting things sold ('I sell 3 rice'). "
                     "'restock': bought/added new stock of an EXISTING item "
@@ -162,7 +162,8 @@ INTENT_TOOL = {
                     "product to track. 'query': asking about stock, money, or "
                     "sales. 'add_guardian': wanting a family member or friend "
                     "to monitor, oversee, or receive updates about the shop. "
-                    "'help'/'smalltalk': anything else."
+                    "'share_shop': asking for their shop link/page/storefront "
+                    "to share with customers. 'help'/'smalltalk': anything else."
                 ),
             },
             "query_kind": {
@@ -182,7 +183,6 @@ INTENT_TOOL = {
         "required": ["type", "language"],
     },
 }
-
 
 # ---------------- sale extraction ----------------
 

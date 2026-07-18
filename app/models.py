@@ -68,6 +68,8 @@ class User(Base):
     pending_action: Mapped[dict | None] = mapped_column(JSONB)
     last_seen_at: Mapped[datetime] = _ts()
     quiet_alerted: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
+    slug: Mapped[str | None] = mapped_column(String(64), unique=True)
+    weekly_summary_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _ts()
 
     items: Mapped[list["Item"]] = relationship(back_populates="user")
