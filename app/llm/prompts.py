@@ -159,6 +159,10 @@ _CANNED.update({
         "en": "🧾 You sold:\n{lines}\n\nTotal: *{total}*. Correct?",
         "pcm": "🧾 You sell:\n{lines}\n\nTotal: *{total}*. E correct?",
     },
+    "daily_checkin": {
+        "en": "Good evening! 🌙 Wetin you sell today? Tell me — like *I sold 2 bags of rice and 1 carton of milk* — make I update your records.",
+        "pcm": "Good evening! 🌙 Wetin you sell today? Talk am — like *I sell 2 bags of rice and 1 carton of milk* — make I update your book.",
+    },
     "sale_unmatched_note": {
         "en": "\n\n⚠️ I no see *{names}* for your stock list, so I never count am. You fit add am as new item later.",
         "pcm": "\n\n⚠️ I no see *{names}* for your stock list, so I never count am. You fit add am as new item later.",
